@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HakkaGo! 客語認證海量特訓與智慧闖關島</title>
+    <!-- 引入 Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Animate.css 增強動畫庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        .btn-3d {
+            transition: all 0.1s ease;
+            transform: translateY(0);
+        }
+        .btn-3d:active:not(:disabled) {
+            transform: translateY(4px);
+            border-bottom-width: 0px !important;
+        }
+        .bg-mesh {
+            background-color: #f8fafc;
+            background-image: radial-gradient(at 0% 0%, rgba(240, 253, 244, 1) 0, transparent 50%), 
+                              radial-gradient(at 100% 100%, rgba(245, 243, 255, 1) 0, transparent 50%);
+        }
+        .glow-progress { box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); }
+        
+        /* 仿多鄰國地圖路徑虛線 */
+        .map-path { position: relative; }
+        .map-path::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 32px;
+            border-left: 4px dashed #cbd5e1;
+            z-index: 0;
+        }
+        .map-path:last-child::after { display: none; }
+
+        /* ==========================================
+           🐆 全身石虎小栗高級 CSS 骨架核心動畫
+           ========================================== */
+        
+        /* 1. 身體整體呼吸起伏 */
+        .leopard-body-breathe {
+            animation: leopardBreathe 3s ease-in-out infinite;
+            transform-origin: bottom center;
+        }
+        @keyframes leopardBreathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02) translateY(-2px); }
+        }
+
+        /* 2. 頭部俏皮搖晃 */
+        .leopard-head-shake {
+            animation: leopardHead 4s ease-in-out infinite;
+            transform-origin: 50px 55px;
+        }
+        @keyframes leopardHead {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-3deg); }
+            75% { transform: rotate(3deg); }
+        }
+
+        /* 3. 左手招財揮動 */
+        .leopard-left-paw {
+            animation: waveLeftPaw 1.5s ease-in-out infinite;
+            transform-origin: 32px 75px;
+        }
+        @keyframes waveLeftPaw {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-20deg) translateY(-3px); }
+        }
+
+        /* 4. 右手開心揮動 */
+        .leopard-right-paw {
+            animation: waveRightPaw 1.8s ease-in-out infinite;
+            transform-origin: 68px 75px;
+        }
+        @keyframes waveRightPaw {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(25deg) translateY(-2px); }
+        }
+
+        /* 5. 軟Q石虎斑紋尾巴搖擺 */
+        .leopard-tail-wag {
+            animation: wagTail 2.5s ease-in-out infinite;
+            transform-origin: 70px 88px;
+        }
+        @keyframes wagTail {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(18deg) translateX(2px); }
+        }
+
+        /* 轉場專用過場特效 */
+        @keyframes leopard-roll {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.3) rotate(180deg) translateX(40px); opacity: 0.8; }
+            100% { transform: scale(0) rotate(360deg) translateX(180px); opacity: 0; }
+        }
+        @keyframes leopard-jump {
+            0% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(10px) scaleY(0.85); }
+            60% { transform: translateY(-100px) scaleY(1.15); opacity: 0.6; }
+            100% { transform: translateY(-180px) scale(0); opacity: 0; }
+        }
+        .animate-leopard-roll { animation: leopard-roll 0.65s ease-in-out forwards; }
+        .animate-leopard-jump { animation: leopard-jump 0.65s ease-in-out forwards; }
+    </style>
+</head>
+<body class="bg-mesh text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- 全域轉場遮罩與石虎動畫舞台 -->
+    <div id="transition-overlay" class="fixed inset-0 bg-emerald-500/10 backdrop-blur-sm z-50 flex items-center justify-center hidden pointer-events-none">
+        <div id="transition-mascot" class="w-36 h-36"></div>
+    </div>
+
+    <!-- 頂部導覽列 -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2 cursor-pointer group" onclick="goHome()">
+                <span class="text-3xl transform group-hover:rotate-12 transition-transform duration-300">🍊</span>
+                <span class="font-black text-2xl tracking-wider bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">HakkaGo!</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div id="nav-user-stats" class="hidden flex items-center gap-3 bg-slate-100 px-4 py-1.5 rounded-2xl text-sm font-bold shadow-inner border border-slate-200/50">
+                    <span class="text-slate-600 text-xs flex items-center gap-1" id="nav-username">👤 玩家</span>
+                    <div class="h-4 w-[1px] bg-slate-300"></div>
+                    <span class="text-orange-500 flex items-center gap-1">🔥 <span id="nav-streak">3</span> 天</span>
+                    <div class="h-4 w-[1px] bg-slate-300"></div>
+                    <span class="text-amber-500 flex items-center gap-1">🪙 <span id="nav-points">0</span> <span class="text-xs text-slate-400">pt</span></span>
+                </div>
+                <button id="logout-btn" onclick="logout()" class="hidden text-xs font-bold text-slate-500 hover:text-red-500 bg-slate-100 hover:bg-red-50 px-2.5 py-1.5 rounded-xl border border-slate-200 transition-all">登出/切換</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主內容區 -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col justify-center">
+
+        <!-- 畫面一：登入/註冊/遊客門戶 -->
+        <section id="auth-screen" class="bg-white/90 backdrop-blur-lg p-8 rounded-3xl shadow-xl border border-slate-200/60 max-w-md mx-auto w-full animate__animated animate__fadeInUp space-y-5">
+            <div class="text-center space-y-2 relative flex flex-col items-center">
+                <div id="auth-leopard" class="w-32 h-32"></div>
+                <span class="absolute top-2 right-10 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow animate__animated animate__bounce animate__infinite">按好客！</span>
+                <h2 class="text-2xl font-black text-slate-900">客語認證特訓島</h2>
+                <p class="text-xs text-slate-400">大家好我是小栗</p>
+            </div>
+
+            <div class="flex bg-slate-100 p-1 rounded-xl">
+                <button id="tab-login" onclick="switchAuthTab('login')" class="w-1/2 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-slate-800 transition-all">帳號登入</button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="w-1/2 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">新用戶註冊</button>
+            </div>
+
+            <div class="space-y-4">
+                <div id="nickname-field" class="hidden space-y-1">
+                    <label class="text-xs font-bold text-slate-500">學習者暱稱</label>
+                    <input type="text" id="auth-nickname" placeholder="例如：客家小學霸" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500">登入帳號</label>
+                    <input type="text" id="auth-username" placeholder="請輸入帳號" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500">安全密碼</label>
+                    <input type="password" id="auth-password" placeholder="請輸入密碼" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <button id="auth-submit-btn" onclick="handleAuthSubmit()" class="btn-3d w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-2xl font-bold border-b-4 border-emerald-700 active:border-b-0 text-sm tracking-wider shadow">
+                    立即登入
+                </button>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-4 text-slate-400 text-xs font-bold">或者</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <button onclick="loginAsGuest()" class="btn-3d w-full bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-2xl font-bold border-b-4 border-slate-950 active:border-b-0 text-sm tracking-wider shadow flex items-center justify-center gap-2">
+                    🔑 快速遊客登入 (免帳號直接玩)
+                </button>
+            </div>
+        </section>
+
+        <!-- 畫面二：主導覽大廳 (雙模式選擇) -->
+        <section id="welcome-screen" class="hidden bg-white/90 backdrop-blur-lg p-6 rounded-3xl shadow-xl border border-slate-200/60 max-w-3xl mx-auto w-full animate__animated animate__fadeIn space-y-6">
+            
+            <!-- 石虎對話互動框 -->
+            <div class="flex flex-col sm:flex-row items-center bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-100 gap-4 relative overflow-hidden shadow-sm">
+                <div id="lobby-leopard" class="w-24 h-24 bg-white p-1 rounded-2xl shadow-sm border border-amber-200 cursor-pointer flex items-center justify-center" onclick="clickLeopard()"></div>
+                <div class="text-center sm:text-left space-y-1 z-10 flex-1">
+                    <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2 justify-center sm:justify-start">
+                        大家好我是小栗 🐾
+                    </h1>
+                    <p id="leopard-bubble" class="text-xs text-amber-800 font-bold bg-white/80 px-3 py-1 rounded-xl inline-block border border-amber-200 animate__animated animate__headShake">
+                        點擊我可以聽日常對話密技！A部分已經為你把語音練習功能加回來囉！
+                    </p>
+                </div>
+                <button onclick="showScreen('store-screen')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all shrink-0 z-10">
+                    進入福利商城 🛍️
+                </button>
+            </div>
+
+            <!-- 雙模式並存主切換區 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- 左側：模式 A（海量大隨機抽題模式） -->
+                <div class="bg-slate-50/50 p-5 rounded-2xl border border-slate-200 space-y-3 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-black text-slate-800 border-b border-slate-200 pb-2 flex items-center gap-1">🎲 模式 A：自由海量刷題池 <span class="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-medium">隨機抽5題</span></h3>
+                        <p class="text-xs text-slate-400 mt-1">不限關卡隨選難度，專屬語音辨識與生活情境考題特訓！</p>
+                    </div>
+
+                    <div class="space-y-1.5 pt-2">
+                        <button onclick="triggerMascotTransition('pinyin', false)" class="btn-3d w-full p-2.5 bg-white border border-slate-200 hover:border-amber-400 rounded-xl flex items-center justify-between text-left shadow-sm text-xs font-bold border-b-4">
+                            <span>🎯 零基礎：看字選教育部拼音</span> <span class="text-amber-500">➔</span>
+                        </button>
+                        <button onclick="triggerMascotTransition('basic', false)" class="btn-3d w-full p-2.5 bg-white border border-slate-200 hover:border-emerald-400 rounded-xl flex items-center justify-between text-left shadow-sm text-xs font-bold border-b-4">
+                            <span>🌱 初級認證：生活情境語意填空</span> <span class="text-emerald-500">➔</span>
+                        </button>
+                        <button onclick="triggerMascotTransition('intermediate', false)" class="btn-3d w-full p-2.5 bg-white border border-slate-200 hover:border-indigo-400 rounded-xl flex items-center justify-between text-left shadow-sm text-xs font-bold border-b-4">
+                            <span>📘 中高級認證：俚諺熟語與修辭能力</span> <span class="text-indigo-500">➔</span>
+                        </button>
+                        <!-- 🎙️ 成功加回 A 部分 -->
+                        <button onclick="triggerMascotTransition('speaking', false)" class="btn-3d w-full p-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white border border-indigo-300 hover:from-indigo-600 rounded-xl flex items-center justify-between text-left shadow-sm text-xs font-bold border-b-4">
+                            <span>🎙️ 語音辨識大師：口說發音特訓</span> <span class="text-white">➔</span>
+                        </button>
+                        <button onclick="triggerMascotTransition('advanced', false)" class="btn-3d w-full p-2.5 bg-white border border-slate-200 hover:border-purple-400 rounded-xl flex items-center justify-between text-left shadow-sm text-xs font-bold border-b-4">
+                            <span>👑 高級認證：傳統典故與文言學霸區</span> <span class="text-purple-400">➔</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 右側：模式 B（多鄰國闖關模式） -->
+                <div class="bg-indigo-50/20 p-5 rounded-2xl border border-indigo-100/60 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-black text-indigo-900 border-b border-indigo-100 pb-2 flex items-center gap-1">🗺️ 模式 B：多鄰國闖關地圖樹</h3>
+                        <p class="text-xs text-slate-400 mt-1">階梯式線性任務。包含最新加入的生活疊字填空核心關卡！</p>
+                    </div>
+
+                    <!-- 地圖樹渲染槽 -->
+                    <div class="flex flex-col items-center gap-8 py-4 overflow-y-auto max-h-[260px] pr-1 mt-2" id="map-tree-container">
+                        <!-- 由 JS 動態生成地圖關卡 -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 畫面三：答題核心 -->
+        <section id="quiz-screen" class="bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col min-h-[580px] w-full max-w-2xl mx-auto hidden relative">
+            <header class="px-6 py-4 flex items-center justify-between gap-4 border-b border-slate-100 bg-white/50 backdrop-blur">
+                <button onclick="quitQuiz()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
+                <div class="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden p-[2px] border border-slate-200/30">
+                    <div id="quiz-progress-bar" class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-full rounded-full transition-all duration-500 ease-out glow-progress" style="width: 0%;"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div id="quiz-mini-leopard" class="w-10 h-10 flex items-center justify-center"></div>
+                    <div class="font-bold text-red-500 flex items-center gap-1 text-sm bg-red-50 px-2.5 py-1 rounded-full border border-red-100">
+                        ❤️ <span id="quiz-hearts-display">5</span>
+                    </div>
+                </div>
+            </header>
+
+            <main id="quiz-dynamic-content" class="flex-1 px-8 py-6 flex flex-col justify-center">
+                <!-- 由 JavaScript 動態填入 -->
+            </main>
+
+            <footer id="quiz-footer" class="border-t-2 border-slate-100 bg-white">
+                <div class="max-w-2xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div id="quiz-feedback" class="w-full sm:w-auto hidden flex items-center gap-3 animate__animated animate__bounceInUp">
+                        <!-- 動態塞入小栗與反饋內容 -->
+                    </div>
+                    <div class="w-full sm:w-auto text-right">
+                        <button id="quiz-action-btn" disabled onclick="handleQuizAction()" class="btn-3d w-full sm:w-44 py-3 rounded-2xl font-bold text-white bg-slate-300 border-b-4 border-slate-400 active:border-b-0 cursor-not-allowed text-sm shadow">
+                            檢查答案
+                        </button>
+                    </div>
+                </div>
+            </footer>
+        </section>
+
+        <!-- 畫面四：福利商城 -->
+        <section id="store-screen" class="bg-white/90 backdrop-blur-lg p-6 rounded-3xl shadow-xl border border-slate-200/80 w-full max-w-2xl mx-auto hidden space-y-5 animate__animated animate__fadeInUp">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight">🎁 點數福利商城</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">跟著小栗修煉賺來的 pt 點數，可以隨時免費換禮物！</p>
+                </div>
+                <button onclick="showScreen('welcome-screen')" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all">
+                    返回大廳
+                </button>
+            </div>
+
+            <div class="bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 rounded-2xl p-5 text-white flex justify-between items-center shadow-lg">
+                <div>
+                    <p class="text-indigo-100 text-xs font-bold uppercase tracking-widest">Available Points</p>
+                    <h3 class="text-3xl font-black mt-1 tracking-tight flex items-baseline gap-1">
+                        <span id="store-user-points">0</span> <span class="text-sm font-normal text-indigo-200">pt</span>
+                    </h3>
+                </div>
+                <span class="text-4xl bg-white/10 p-2.5 rounded-xl">🪙</span>
+            </div>
+
+            <div class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1" id="store-items-container"></div>
+        </section>
+
+    </main>
+
+    <!-- 全域智慧模態窗 -->
+    <div id="global-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div id="modal-body" class="bg-white rounded-3xl p-6 max-w-xl w-full text-center shadow-2xl border border-slate-100 relative flex flex-col items-center">
+            <div id="modal-leopard-img" class="w-28 h-28 mb-2 flex items-center justify-center"></div>
+            <h3 id="modal-title" class="text-2xl font-black mb-1 text-slate-900">挑戰成功</h3>
+            <p id="modal-desc" class="text-slate-500 text-sm mb-4 whitespace-pre-line leading-relaxed"></p>
+            
+            <!-- AI錯題分析大講堂 -->
+            <div id="wrong-questions-lecture" class="w-full text-left bg-slate-50 rounded-2xl border border-slate-200 p-4 mb-6 hidden max-h-60 overflow-y-auto space-y-4 shadow-inner"></div>
+
+            <button id="modal-action-btn" onclick="closeModal()" class="btn-3d w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-2xl font-bold shadow-md border-b-4 border-slate-950 active:border-b-0 text-sm tracking-wider">
+                確認
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 🎨 【全身動態版】純代碼精緻繪製的 SVG 石虎小栗
+        const LEOPARD_SVG_CODE = `
+            <svg viewBox="0 0 100 100" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <g class="leopard-body-breathe">
+                    <g class="leopard-tail-wag">
+                        <path d="M 68,84 Q 88,85 85,72 Q 82,62 92,60 C 95,64 90,76 76,88 Z" fill="#D2904C" />
+                        <path d="M 75,82 Q 78,85 76,86" stroke="#78350F" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M 82,78 Q 85,79 84,81" stroke="#78350F" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M 84,70 Q 88,71 86,73" stroke="#78350F" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+                    <ellipse cx="35" cy="90" rx="8" ry="4" fill="#78350F" opacity="0.3"/>
+                    <ellipse cx="65" cy="90" rx="8" ry="4" fill="#78350F" opacity="0.3"/>
+                    <rect x="28" y="84" width="12" height="7" rx="3" fill="#D2904C"/>
+                    <rect x="60" y="84" width="12" height="7" rx="3" fill="#D2904C"/>
+                    <ellipse cx="50" cy="76" rx="22" ry="16" fill="#FBBF24"/>
+                    <ellipse cx="50" cy="77" rx="14" ry="11" fill="#FFFFFF"/>
+                    <circle cx="34" cy="74" r="2" fill="#78350F"/>
+                    <circle cx="66" cy="74" r="2" fill="#78350F"/>
+                    <circle cx="36" cy="80" r="1.5" fill="#78350F"/>
+                    <circle cx="64" cy="80" r="1.5" fill="#78350F"/>
+                    <g class="leopard-left-paw">
+                        <rect x="24" y="70" width="10" height="12" rx="5" fill="#FCD34D" transform="rotate(15, 29, 76)"/>
+                        <circle cx="27" cy="79" r="3" fill="#F87171" opacity="0.8" />
+                    </g>
+                    <g class="leopard-right-paw">
+                        <rect x="66" y="70" width="10" height="12" rx="5" fill="#FCD34D" transform="rotate(-15, 71, 76)"/>
+                        <circle cx="73" cy="79" r="3" fill="#F87171" opacity="0.8" />
+                    </g>
+                    <g class="leopard-head-shake">
+                        <polygon points="20,40 10,15 40,28" fill="#D2904C"/>
+                        <polygon points="23,37 15,19 37,28" fill="#FCD34D"/>
+                        <ellipse cx="22" cy="26" rx="4" ry="2" fill="#FFFFFF" transform="rotate(-20, 22, 26)"/>
+                        <polygon points="80,40 90,15 60,28" fill="#D2904C"/>
+                        <polygon points="77,37 85,19 63,28" fill="#FCD34D"/>
+                        <ellipse cx="78" cy="26" rx="4" ry="2" fill="#FFFFFF" transform="rotate(20, 78, 26)"/>
+                        <ellipse cx="50" cy="52" rx="34" ry="26" fill="#FBBF24"/>
+                        <path d="M 16,52 Q 16,70 50,78 Q 84,70 84,52 Z" fill="#FCD34D"/>
+                        <path d="M 44,28 Q 45,41 42,46" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <path d="M 56,28 Q 55,41 58,46" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <circle cx="24" cy="48" r="3" fill="#78350F"/>
+                        <circle cx="22" cy="58" r="2" fill="#78350F"/>
+                        <circle cx="76" cy="48" r="3" fill="#78350F"/>
+                        <circle cx="78" cy="58" r="2" fill="#78350F"/>
+                        <circle cx="35" cy="49" r="6.5" fill="#1E293B"/>
+                        <circle cx="33" cy="46" r="2.5" fill="#FFFFFF"/>
+                        <circle cx="65" cy="49" r="6.5" fill="#1E293B"/>
+                        <circle cx="67" cy="46" r="2.5" fill="#FFFFFF"/>
+                        <circle cx="25" cy="60" r="4" fill="#F87171" opacity="0.6"/>
+                        <circle cx="75" cy="60" r="4" fill="#F87171" opacity="0.6"/>
+                        <polygon points="50,58 46,54 54,54" fill="#78350F"/>
+                        <path d="M 50,58 Q 47,62 44,61 M 50,58 Q 53,62 56,61" stroke="#78350F" stroke-width="1.5" fill="none"/>
+                        <line x1="18" y1="60" x2="8" y2="59" stroke="#78350F" stroke-width="1"/>
+                        <line x1="19" y1="64" x2="10" y2="66" stroke="#78350F" stroke-width="1"/>
+                        <line x1="82" y1="60" x2="92" y2="59" stroke="#78350F" stroke-width="1"/>
+                        <line x1="81" y1="64" x2="72" y2="66" stroke="#78350F" stroke-width="1"/>
+                    </g>
+                </g>
+            </svg>
+        `;
+
+        const levelTree = [
+            { id: "level_1", name: "關卡 1：初階拼音調性", type: "pinyin", icon: "🎯", bg: "bg-amber-500" },
+            { id: "level_2", name: "關卡 2：初級生活語意填空", type: "basic", icon: "🌱", bg: "bg-emerald-500" },
+            { id: "level_3", name: "關卡 3：中高階熟語與疊字", type: "intermediate", icon: "📘", bg: "bg-indigo-500" },
+            { id: "level_4", name: "關卡 4：終極語音發音魔王", type: "speaking", icon: "🎙️", bg: "bg-purple-600" }
+        ];
+
+        // 🌟 【擴充核心庫】在此加入與 image_1a3942.png 完全一致的生活情境漢字疊字填空題！
+        const database = {
+            pinyin: [
+                { type: "pinyin-match", question_text: "「阿姆」（媽媽）的正確拼音是？", options: ["aˊ meˊ", "a mian", "ngid thieuˇ", "mien pa"], correct_answer: "aˊ meˊ" },
+                { type: "pinyin-match", question_text: "「日頭」（太陽）的正確拼音是？", options: ["logˋ suiˋ", "ngid thieuˇ", "aˊ meˊ", "pa mien"], correct_answer: "ngid thieuˇ" },
+                { type: "pinyin-match", question_text: "「面帕」（毛巾）的正確拼音是？", options: ["mien pha", "mian pa", "aˊ meˊ", "logˋ suiˋ"], correct_answer: "mien pha" }
+            ],
+            basic: [
+                // 🎯 參考 image_1a3942.png 核心填空邏輯開發的衍生題
+                { type: "multiple-choice", question_text: "生活情境填空：\n「壞蹄哩！糖仔分老弟食______哩！」", options: ["1. 淨淨 (意指精光不剩)", "2. 淨俐", "3. 清清"], correct_answer: "1. 淨淨 (意指精光不剩)" },
+                { type: "multiple-choice", question_text: "生活情境填空：\n「阿媽煞猛（勤勞）打掃，將客廳洗到______！」", options: ["1. 離離", "2. 溜溜 (意指非常乾淨光滑)", "3. 淡淡"], correct_answer: "2. 溜溜 (意指非常乾淨光滑)" },
+                { type: "multiple-choice", question_text: "生活情境填空：\n「外背（外面）當熱，佢汗流到______，著（穿）衣服都濕透哩。」", options: ["1. 溚溚 (意指濕漉漉)", "2. 淡淡", "3. 微微"], correct_answer: "1. 溚溚 (意指濕漉漉)" },
+                { type: "multiple-choice", question_text: "客語的「阿姆」（A-mê）是指誰？", options: ["奶奶", "媽媽", "姐姐", "阿姨"], correct_answer: "媽媽" }
+            ],
+            intermediate: [
+                // 🎯 中高級高難度生活狀態疊字辨析題
+                { type: "multiple-choice", question_text: "語意辨析：\n「該兩兄弟異（非常）像______，每擺（每當）見面便會相吵。」", options: ["1. 冤家 (冤家對頭)", "2. 結拜", "3. 同胞"], correct_answer: "1. 冤家 (冤家對頭)" },
+                { type: "multiple-choice", question_text: "生活情境填空：\n「天公（老天爺）起黑陰，無一絲落雨，天色看起來______。」", options: ["1. 烏烏 (黑壓壓的)", "2. 白白", "3. 乾乾"], correct_answer: "1. 烏烏 (黑壓壓的)" },
+                { type: "multiple-choice", question_text: "生活情境填空：\n「老爸去田裡做工，行路（走路）腳步聲______，聽起來當有精神。」", options: ["1. 鏗鏗 (形容聲音響亮有勁)", "2. 靜靜", "3. 緩緩"], correct_answer: "1. 鏗鏗 (形容聲音響亮有勁)" },
+                { type: "multiple-choice", question_text: "客家歇後語「卵匠賣豆腐面孔」是指什麼意思？", options: ["面帶微笑", "心狠手辣/面惡心善", "外表好看內部腐爛", "割捨不理"], correct_answer: "心狠手辣/面惡心善" }
+            ],
+            advanced: [
+                { type: "multiple-choice", question_text: "客語古語動詞「犒勞」（Kô-lô）源自古漢語，通常指什麼？", options: ["辛苦工作", "欺負弱小", "款待慰勞/宴請贈禮", "爭執抗議"], correct_answer: "款待慰勞/宴請贈禮" },
+                { type: "multiple-choice", question_text: "高級認證單字「枵」（Iâu），其在客語中對應的意思是？", options: ["飽足", "死板", "飢餓", "疲倦"], correct_answer: "飢餓" }
+            ],
+            speaking: [
+                { type: "ai-speaking", question_text: "請開啟麥克風並大聲挑戰終極口說：「食飽冇」", expect_text: "食飽冇", hint: "意思是：吃飽了嗎？" },
+                { type: "ai-speaking", question_text: "請開啟麥克風並大聲挑戰終極口說：「承蒙你」", expect_text: "承蒙你", hint: "意思是：謝謝你。" }
+            ]
+        };
+
+        const storeRewards = [
+            { id: 1, name: "7-ELEVEN 35元 虛擬商品卡", desc: "全台門市通用，一鍵條碼即時刷", cost: 500, icon: "🏪", badge: "熱門爆款" },
+            { id: 2, name: "客語認證精選單字電子書", desc: "收錄核心認證必考1000單字與語音音標", cost: 800, icon: "📚", badge: "數位免運" }
+        ];
+
+        let currentUser = null;
+        let authMode = 'login';
+        let isMapMode = false;
+
+        let activePool = [];
+        let currentIdx = 0;
+        let selectedAns = null;
+        let isChecked = false;
+        let recognition = null;
+        let wrongQuestionsLog = [];
+        let currentLevelId = null;
+
+        const leopardQuotes = [
+            "看我手舞足蹈，今天也要精神滿滿學四縣腔喔！🐾",
+            "圖片中的題目學會了嗎？「淨淨」就是吃得精光的意思！✨",
+            "我的尾巴搖得越快，代表你答對得越多唷～🧡",
+            "多聽幾次標準發音，耳朵才不會咬舌頭～🍊"
+        ];
+
+        function initLeopardHTML() {
+            document.getElementById('auth-leopard').innerHTML = LEOPARD_SVG_CODE;
+            document.getElementById('lobby-leopard').innerHTML = LEOPARD_SVG_CODE;
+            document.getElementById('transition-mascot').innerHTML = LEOPARD_SVG_CODE;
+            document.getElementById('quiz-mini-leopard').innerHTML = LEOPARD_SVG_CODE;
+            document.getElementById('modal-leopard-img').innerHTML = LEOPARD_SVG_CODE;
+        }
+
+        function clickLeopard() {
+            const bubble = document.getElementById('leopard-bubble');
+            const randomQuote = leopardQuotes[Math.floor(Math.random() * leopardQuotes.length)];
+            bubble.innerText = randomQuote;
+            
+            const lobMascot = document.getElementById('lobby-leopard');
+            lobMascot.classList.add('animate__animated', 'animate__wobble');
+            setTimeout(() => {
+                lobMascot.classList.remove('animate__animated', 'animate__wobble');
+            }, 1000);
+        }
+
+        function triggerMascotTransition(type, isFromMap, levelId = null) {
+            const lobbyLeopard = document.getElementById('lobby-leopard');
+            const overlay = document.getElementById('transition-overlay');
+            const transMascot = document.getElementById('transition-mascot');
+            
+            overlay.classList.remove('hidden');
+
+            if (isFromMap) {
+                lobbyLeopard.className = "w-24 h-24 bg-white p-1 rounded-2xl shadow-sm border border-amber-200 animate-leopard-jump flex items-center justify-center";
+                transMascot.className = "w-36 h-36 animate__animated animate__bounceOutUp";
+            } else {
+                lobbyLeopard.className = "w-24 h-24 bg-white p-1 rounded-2xl shadow-sm border border-amber-200 animate-leopard-roll flex items-center justify-center";
+                transMascot.className = "w-36 h-36 animate__animated animate__backOutRight";
+            }
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                lobbyLeopard.className = "w-24 h-24 bg-white p-1 rounded-2xl shadow-sm border border-amber-200 cursor-pointer flex items-center justify-center";
+                startQuiz(type, isFromMap, levelId);
+            }, 650);
+        }
+
+        function getLocalUsers() { return JSON.parse(localStorage.getItem('hakkago_users')) || {}; }
+        function saveLocalUsers(users) { localStorage.setItem('hakkago_users', JSON.stringify(users)); }
+
+        function switchAuthTab(mode) {
+            authMode = mode;
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const nickField = document.getElementById('nickname-field');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            if (mode === 'login') {
+                tabLogin.className = "w-1/2 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-slate-800 transition-all";
+                tabRegister.className = "w-1/2 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all";
+                nickField.classList.add('hidden');
+                submitBtn.innerText = "立即登入";
+            } else {
+                tabRegister.className = "w-1/2 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-slate-800 transition-all";
+                tabLogin.className = "w-1/2 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all";
+                nickField.classList.remove('hidden');
+                submitBtn.innerText = "註冊帳號並登入";
+            }
+        }
+
+        function handleAuthSubmit() {
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const nickname = document.getElementById('auth-nickname').value.trim();
+            if (!username || !password) { alert("請輸入完整帳密！"); return; }
+            let users = getLocalUsers();
+
+            if (authMode === 'register') {
+                if (!nickname) { alert("請輸入暱稱"); return; }
+                if (users[username]) { alert("帳號已存在"); return; }
+                users[username] = { username, password, nickname, points: 0, streak: 1, unlockedLevels: ["level_1"], isGuest: false };
+                saveLocalUsers(users);
+            }
+            if (!users[username] || users[username].password !== password) { alert("密碼錯誤"); return; }
+            loginSuccess(users[username]);
+        }
+
+        function loginAsGuest() {
+            let guestId = localStorage.getItem('hakkago_guest_id') || 'guest_' + Math.floor(Math.random() * 100000);
+            localStorage.setItem('hakkago_guest_id', guestId);
+            let users = getLocalUsers();
+            if (!users[guestId]) {
+                users[guestId] = { username: guestId, password: "", nickname: "新科遊客", points: 0, streak: 1, unlockedLevels: ["level_1"], isGuest: true };
+                saveLocalUsers(users);
+            }
+            loginSuccess(users[guestId]);
+        }
+
+        function loginSuccess(userObj) {
+            currentUser = userObj;
+            sessionStorage.setItem('hakkago_current_session', currentUser.username);
+            document.getElementById('nav-user-stats').classList.remove('hidden');
+            document.getElementById('logout-btn').classList.remove('hidden');
+            showScreen('welcome-screen');
+        }
+
+        function logout() {
+            sessionStorage.removeItem('hakkago_current_session');
+            currentUser = null;
+            document.getElementById('nav-user-stats').classList.add('hidden');
+            document.getElementById('logout-btn').classList.add('hidden');
+            showScreen('auth-screen');
+        }
+
+        function syncUserProgressToStorage() {
+            if (!currentUser) return;
+            let users = getLocalUsers();
+            users[currentUser.username] = currentUser;
+            saveLocalUsers(users);
+            syncUIAssets();
+        }
+
+        function renderMapTree() {
+            const container = document.getElementById('map-tree-container');
+            let html = "";
+            levelTree.forEach((lvl) => {
+                const isUnlocked = currentUser.unlockedLevels.includes(lvl.id);
+                if (isUnlocked) {
+                    html += `
+                        <div class="map-path flex flex-col items-center text-center w-full">
+                            <button onclick="triggerMascotTransition('${lvl.type}', true, '${lvl.id}')" class="btn-3d w-12 h-12 rounded-full ${lvl.bg} text-white text-lg flex items-center justify-center shadow-md border-b-4 border-black/20 hover:scale-110 transition-all relative z-10">
+                                ${lvl.icon}
+                            </button>
+                            <div class="mt-1 bg-white px-2.5 py-0.5 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="font-black text-slate-800 text-[10px]">${lvl.name}</h4>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="map-path flex flex-col items-center text-center w-full opacity-40 select-none">
+                            <div class="w-12 h-12 rounded-full bg-slate-300 text-slate-500 text-lg flex items-center justify-center shadow border-b-4 border-slate-400 relative z-10">🔒</div>
+                        </div>
+                    `;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function goHome() { if(currentUser) showScreen('welcome-screen'); else showScreen('auth-screen'); }
+
+        function showScreen(screenId) {
+            const screens = ['auth-screen', 'welcome-screen', 'quiz-screen', 'store-screen'];
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            if (screenId === 'welcome-screen') renderMapTree();
+            else if (screenId === 'store-screen') renderStoreItems();
+            syncUIAssets();
+        }
+
+        function syncUIAssets() {
+            if (!currentUser) return;
+            document.getElementById('nav-username').innerText = currentUser.isGuest ? "👤 體驗遊客" : `👤 ${currentUser.nickname}`;
+            document.getElementById('nav-streak').innerText = currentUser.streak;
+            document.getElementById('nav-points').innerText = currentUser.points;
+            document.getElementById('store-user-points').innerText = currentUser.points;
+        }
+
+        function renderStoreItems() {
+            const container = document.getElementById('store-items-container');
+            let html = "";
+            storeRewards.forEach(item => {
+                html += `
+                    <div class="border border-slate-200 p-3 rounded-xl flex items-center justify-between bg-white/50 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">${item.icon}</span>
+                            <div>
+                                <h4 class="font-bold text-slate-900">${item.name}</h4>
+                                <p class="text-[11px] text-slate-400">${item.desc}</p>
+                            </div>
+                        </div>
+                        <button onclick="redeemReward('${item.name}', ${item.cost})" class="btn-3d bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-bold border-b-2 border-emerald-700">${item.cost} pt</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function startQuiz(type, isFromMap, levelId = null) {
+            wrongQuestionsLog = [];
+            isMapMode = isFromMap;
+            currentLevelId = levelId;
+            // 隨機洗牌並抽取 5 題
+            let shuffled = JSON.parse(JSON.stringify(database[type] || [])).sort(() => 0.5 - Math.random());
+            activePool = shuffled.slice(0, 5);
+            currentIdx = 0;
+            currentUser.hearts = 5;
+            showScreen('quiz-screen');
+            renderCurrentQuestion();
+        }
+
+        function renderCurrentQuestion() {
+            if (currentIdx >= activePool.length) {
+                const bonus = isMapMode ? 350 : 200;
+                currentUser.points += bonus;
+                let unlockMsg = "";
+                if (isMapMode) {
+                    const currentLvlIdx = levelTree.findIndex(l => l.id === currentLevelId);
+                    if (currentLvlIdx !== -1 && currentLvlIdx + 1 < levelTree.length) {
+                        const nextLvl = levelTree[currentLvlIdx + 1];
+                        if (!currentUser.unlockedLevels.includes(nextLvl.id)) {
+                            currentUser.unlockedLevels.push(nextLvl.id);
+                            unlockMsg = `\n🔓 成功解鎖下一個島嶼關卡！`;
+                        }
+                    }
+                }
+                syncUserProgressToStorage();
+                document.getElementById('modal-leopard-img').className = "w-28 h-28 mb-2 flex items-center justify-center animate__animated animate__bounce";
+                showModal('小栗全身為你熱舞歡呼！', `順利完賽！獲得點數：+${bonus} pt！${unlockMsg}`, () => { showScreen('welcome-screen'); });
+                return;
+            }
+
+            document.getElementById('quiz-hearts-display').innerText = currentUser.hearts;
+            document.getElementById('quiz-progress-bar').style.width = `${(currentIdx / activePool.length) * 100}%`;
+            document.getElementById('quiz-mini-leopard').className = "w-10 h-10 flex items-center justify-center";
+
+            selectedAns = null;
+            isChecked = false;
+            
+            const footer = document.getElementById('quiz-footer');
+            const feedback = document.getElementById('quiz-feedback');
+            const actionBtn = document.getElementById('quiz-action-btn');
+
+            footer.className = "border-t-2 border-slate-100 bg-white py-4";
+            feedback.classList.add('hidden');
+            actionBtn.innerText = "檢查答案";
+            actionBtn.disabled = true;
+            actionBtn.className = "btn-3d w-full sm:w-44 py-3 rounded-2xl font-bold text-white bg-slate-300 border-b-4 border-slate-400 active:border-b-0 cursor-not-allowed text-sm shadow";
+
+            const q = activePool[currentIdx];
+            // 支援斷行顯示題目情境
+            let formattedQuestion = q.question_text.replace(/\n/g, '<br>');
+            let html = `
+                <div class="space-y-4 animate__animated animate__fadeIn">
+                    <h2 class="text-base font-black text-slate-950 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200/60">${formattedQuestion}</h2>
+            `;
+
+            if (q.type === 'ai-speaking') {
+                html += `
+                    <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center space-y-3">
+                        <p class="text-xs text-amber-600 font-bold">提示：${q.hint}</p>
+                        <button onclick="toggleSpeechRecording()" class="w-14 h-14 rounded-full bg-indigo-500 text-white text-xl flex items-center justify-center mx-auto shadow border-b-4 border-indigo-700 active:border-b-0">🎙️</button>
+                        <div id="speak-result-box" class="text-xs text-slate-500 font-bold">點擊開始錄音，對麥克風大聲朗讀吧！</div>
+                    </div>
+                `;
+            } else {
+                html += `<div class="grid grid-cols-1 gap-2">`;
+                q.options.forEach((opt, idx) => {
+                    html += `
+                        <button id="opt-btn-${idx}" onclick="selectAnswer('${opt}', ${idx})" class="btn-3d w-full p-3 rounded-xl text-left font-bold text-slate-600 border-2 border-slate-200 border-b-4 flex items-center text-xs">
+                            <span class="w-5 h-5 rounded bg-slate-100 flex items-center justify-center mr-2 text-[10px] text-slate-400 font-black">${idx+1}</span>
+                            ${opt}
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+            }
+            document.getElementById('quiz-dynamic-content').innerHTML = html;
+        }
+
+        function selectAnswer(opt, index) {
+            if (isChecked) return;
+            selectedAns = opt;
+            activePool[currentIdx].options.forEach((_, i) => {
+                document.getElementById(`opt-btn-${i}`).className = "btn-3d w-full p-3 rounded-xl text-left font-bold text-slate-600 border-2 border-slate-200 border-b-4 flex items-center text-xs";
+            });
+            document.getElementById(`opt-btn-${index}`).className = "btn-3d w-full p-3 rounded-xl text-left font-bold text-blue-700 border-2 border-blue-400 bg-blue-50 border-b-4 flex items-center text-xs";
+            
+            const actionBtn = document.getElementById('quiz-action-btn');
+            actionBtn.disabled = false;
+            actionBtn.className = "btn-3d w-full sm:w-44 py-3 rounded-2xl font-bold text-white bg-emerald-500 hover:bg-emerald-600 border-b-4 border-emerald-700 active:border-b-0 text-sm shadow cursor-pointer";
+        }
+
+        function handleQuizAction() {
+            const q = activePool[currentIdx];
+            const footer = document.getElementById('quiz-footer');
+            const feedback = document.getElementById('quiz-feedback');
+            const actionBtn = document.getElementById('quiz-action-btn');
+
+            if (!isChecked) {
+                isChecked = true;
+                feedback.classList.remove('hidden');
+
+                let isCorrect = (selectedAns === q.correct_answer);
+                if (q.type === 'ai-speaking') isCorrect = selectedAns && selectedAns.includes(q.expect_text);
+
+                if (isCorrect) {
+                    footer.className = "border-t-2 border-green-200 bg-green-50 py-4";
+                    feedback.innerHTML = `
+                        <div class="w-14 h-14 animate__animated animate__dance">${LEOPARD_SVG_CODE}</div>
+                        <div>
+                            <p class="text-sm font-black text-green-700">完全正確！全身為你歡呼！</p>
+                            <p class="text-[11px] text-green-600">小栗覺得你的日常情境語感極佳！</p>
+                        </div>
+                    `;
+                    document.getElementById('quiz-mini-leopard').className = "w-10 h-10 flex items-center justify-center animate__animated animate__bounce";
+                } else {
+                    wrongQuestionsLog.push({ question_text: q.question_text, your_answer: selectedAns || "未作答", correct_answer: q.correct_answer || q.expect_text });
+                    footer.className = "border-t-2 border-red-200 bg-red-50 py-4";
+                    feedback.innerHTML = `
+                        <div class="w-14 h-14 opacity-75 animate__animated animate__headShake">${LEOPARD_SVG_CODE}</div>
+                        <div>
+                            <p class="text-sm font-black text-red-700">哎呀，不小心選錯了！</p>
+                            <p class="text-[11px] text-red-600">正確答案是：${q.correct_answer || q.expect_text}</p>
+                        </div>
+                    `;
+                    document.getElementById('quiz-mini-leopard').className = "w-10 h-10 flex items-center justify-center opacity-50";
+                    currentUser.hearts--;
+                    document.getElementById('quiz-hearts-display').innerText = currentUser.hearts;
+
+                    if (currentUser.hearts <= 0) {
+                        document.getElementById('modal-leopard-img').className = "w-28 h-28 mb-2 flex items-center justify-center opacity-50";
+                        showModal('挑戰失敗', '愛心歸零了，先跟著小栗回大廳檢討錯題吧！', () => { showScreen('welcome-screen'); });
+                        return;
+                    }
+                }
+                actionBtn.innerText = "下一題";
+            } else {
+                currentIdx++;
+                renderCurrentQuestion();
+            }
+        }
+
+        function toggleSpeechRecording() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("瀏覽器不支援語音辨識機制"); return; }
+            if (!recognition) {
+                recognition = new SpeechRecognition();
+                recognition.lang = "zh-TW";
+                recognition.onresult = (e) => {
+                    const txt = e.results[0][0].transcript;
+                    document.getElementById('speak-result-box').innerText = `偵測到發音：${txt}`;
+                    selectedAns = txt;
+                    document.getElementById('quiz-action-btn').disabled = false;
+                    document.getElementById('quiz-action-btn').className = "btn-3d w-full sm:w-44 py-3 rounded-2xl font-bold text-white bg-emerald-500 border-b-4 border-emerald-700 active:border-b-0 text-sm shadow cursor-pointer";
+                };
+            }
+            recognition.start();
+        }
+
+        function redeemReward(name, cost) {
+            if (currentUser.points < cost) { 
+                document.getElementById('modal-leopard-img').className = "w-28 h-28 mb-2 flex items-center justify-center opacity-70";
+                showModal('點數不足哩', `再加把勁去刷題或闖關累積點數吧！`, null); 
+            } else { 
+                currentUser.points -= cost; 
+                syncUserProgressToStorage(); 
+                document.getElementById('modal-leopard-img').className = "w-28 h-28 mb-2 flex items-center justify-center animate__animated animate__jackInTheBox";
+                showModal('兌換成功！', `商品已安全存入保險箱！`, null); 
+            }
+        }
+
+        let modalCallback = null;
+        function showModal(title, desc, callback = null) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            modalCallback = callback;
+
+            const lectureBox = document.getElementById('wrong-questions-lecture');
+            if (wrongQuestionsLog.length > 0) {
+                lectureBox.classList.remove('hidden');
+                let h = `<p class="text-xs font-black text-indigo-900 border-b pb-1 mb-2">🐾 小栗老師 AI 錯題指引教室：</p>`;
+                wrongQuestionsLog.forEach(w => {
+                    let cleanQ = w.question_text.replace(/\n/g, ' ');
+                    h += `<div class="bg-white p-2 rounded border border-slate-200 text-[11px]">
+                        <strong>${cleanQ}</strong><br>
+                        <span class="text-red-500">殘念答案: ${w.your_answer}</span> | <span class="text-green-600 font-bold">標準解: ${w.correct_answer}</span>
+                    </div>`;
+                });
+                lectureBox.innerHTML = h;
+            } else { lectureBox.classList.add('hidden'); }
+            document.getElementById('global-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('global-modal').classList.add('hidden');
+            document.getElementById('modal-leopard-img').className = "w-28 h-28 mb-2 flex items-center justify-center";
+            if (modalCallback) { modalCallback(); modalCallback = null; }
+        }
+
+        function quitQuiz() { if(confirm("確定要拋棄小栗退出此局嗎？")) showScreen('welcome-screen'); }
+
+        window.onload = function() {
+            initLeopardHTML();
+
+            const sessionUser = sessionStorage.getItem('hakkago_current_session');
+            if (sessionUser) {
+                let users = getLocalUsers();
+                if (users[sessionUser]) {
+                    currentUser = users[sessionUser];
+                    document.getElementById('nav-user-stats').classList.remove('hidden');
+                    document.getElementById('logout-btn').classList.remove('hidden');
+                    showScreen('welcome-screen');
+                    return;
+                }
+            }
+            showScreen('auth-screen');
+        };
+    </script>
+</body>
+</html>
